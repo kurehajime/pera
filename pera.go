@@ -176,6 +176,9 @@ func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
 	if gravity == false {
+		if runtime.GOOS == "windows" {
+			strs = append([]string{" "}, strs...)
+		}
 		for i := 0; i < len(strs) && i < heigt; i++ {
 			if i != heigt-1 {
 				out.Write([]byte(strs[i] + "\r\n"))
@@ -190,7 +193,11 @@ func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
 				strs = append([]string{" "}, strs...)
 			}
 		}
-		for i := 0; i < len(strs) && i < heigt; i++ {
+		start := 0
+		if runtime.GOOS == "windows" {
+			start = 1
+		}
+		for i := start; i < len(strs) && i < heigt; i++ {
 			if i != heigt-1 {
 				out.Write([]byte(strs[i] + "\r\n"))
 			} else {
