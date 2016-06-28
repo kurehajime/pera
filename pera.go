@@ -47,7 +47,12 @@ func main() {
 	} else {
 		text, err = readFileByArg(flag.Arg(0))
 	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
 	text, err = transEnc(text, encode)
+	text = strings.Replace(text, "\r\n", "\n", -1)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
