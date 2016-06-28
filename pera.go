@@ -3,13 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
 
-	"github.com/mattn/go-runewidth"
+	"github.com/mattn/go-colorable"
+	"github.com/mattn/go-tty"
+
 	"github.com/nsf/termbox-go"
 )
 
@@ -60,6 +63,13 @@ func main() {
 	if text == "" {
 		text = usage
 	}
+	//init tty
+	tty, err := tty.Open()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+	defer tty.Close()
+	out := colorable.NewColorable(tty.Output())
 
 	//term init
 	err = termbox.Init()
@@ -67,27 +77,30 @@ func main() {
 		panic(err)
 	}
 
-	defer termbox.Close()
+	defer func() {
+		clearTerm(out, tty)
+		termbox.Close()
+	}()
+
 	if interval == 0 {
-		keyEvent(text, loop, gravity)
+		keyEvent(out, tty, text, loop, gravity)
 	} else {
-		autoPlay(interval, text, loop, gravity)
+		autoPlay(out, tty, interval, text, loop, gravity)
 	}
 }
 
 // listen key event
-func keyEvent(text string, loop bool, gravity bool) {
+func keyEvent(out io.Writer, tty *tty.TTY, text string, loop bool, gravity bool) {
 	rep := regexp.MustCompile(`(?m:\n^---\n)`)
 	strs := rep.Split(text, -1)
 	i := 0
-	draw(strs[i], gravity)
+	draw(out, tty, strs[i], gravity)
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyEsc, termbox.KeyCtrlC:
-				clear()
-				termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+				clearTerm(out, tty)
 				return
 			case termbox.KeySpace, termbox.KeyArrowRight, termbox.KeyEnter:
 				i += 1
@@ -95,8 +108,6 @@ func keyEvent(text string, loop bool, gravity bool) {
 					if loop {
 						i = 0
 					} else {
-						clear()
-						termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 						return
 					}
 				}
@@ -106,8 +117,6 @@ func keyEvent(text string, loop bool, gravity bool) {
 					if loop {
 						i = len(strs) - 1
 					} else {
-						clear()
-						termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 						return
 					}
 				}
@@ -115,12 +124,12 @@ func keyEvent(text string, loop bool, gravity bool) {
 			}
 		default:
 		}
-		draw(strs[i], gravity)
+		draw(out, tty, strs[i], gravity)
 	}
 }
 
 //auto
-func autoPlay(interval int, text string, loop bool, gravity bool) {
+func autoPlay(out io.Writer, tty *tty.TTY, interval int, text string, loop bool, gravity bool) {
 	rep := regexp.MustCompile(`(?m:\n^---\n)`)
 	strs := rep.Split(text, -1)
 	stop := false
@@ -134,13 +143,13 @@ func autoPlay(interval int, text string, loop bool, gravity bool) {
 				switch ev.Key {
 				case termbox.KeyEsc, termbox.KeyCtrlC:
 					stop = true
-					clear()
-					termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+					clearTerm(out, tty)
 					return
 				default:
 				}
 			default:
 			}
+
 		}
 
 	}()
@@ -149,53 +158,64 @@ func autoPlay(interval int, text string, loop bool, gravity bool) {
 			if loop == true {
 				i = 0
 			} else {
-				clear()
-				termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+				clearTerm(out, tty)
 				return
 			}
 		}
-		draw(strs[i], gravity)
+		draw(out, tty, strs[i], gravity)
 		time.Sleep(time.Duration(interval) * time.Millisecond)
 	}
 }
 
 //draw
-func draw(str string, gravity bool) {
+func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
+	clearTerm(out, tty)
 	strs := strings.Split(str, "\n")
-	clear()
+	_, heigt, err := tty.Size()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
 	if gravity == false {
-		for i := 0; i < len(strs); i++ {
-			drawLine(i, strs[i])
+		for i := 0; i < len(strs) && i < heigt; i++ {
+			if i != heigt-1 {
+				out.Write([]byte(strs[i] + "\r\n"))
+			} else {
+				out.Write([]byte(strs[i]))
+			}
 		}
 	} else {
-		_, heigt := termbox.Size()
-		for i, r := heigt-1, len(strs)-1; i >= 0 && r >= 0; i, r = i-1, r-1 {
-			drawLine(i, strs[r])
+		if len(strs) < heigt {
+			strlen := len(strs)
+			for i := 0; i < (heigt - strlen); i++ {
+				strs = append([]string{" "}, strs...)
+			}
+		}
+		for i := 0; i < len(strs) && i < heigt; i++ {
+			if i != heigt-1 {
+				out.Write([]byte(strs[i] + "\r\n"))
+			} else {
+				out.Write([]byte(strs[i]))
+			}
 		}
 	}
-
-	termbox.Flush()
 }
 
-//clear terminal
-func clear() {
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	for r := 0; r < 40; r++ {
-		for c := 0; c < 80; c++ {
-			termbox.SetCell(c, r, []rune(" ")[0], termbox.ColorDefault, termbox.ColorDefault)
+func clearTerm(out io.Writer, tty *tty.TTY) {
+	w, h, err := tty.Size()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+	out.Write([]byte(fmt.Sprintf("\x1b[%dA", h)))
+	out.Write([]byte(fmt.Sprintf("\x1b[%dD", w)))
+	for y := 0; y < h; y++ {
+		sp := ""
+		for x := 0; x < w; x++ {
+			sp += " "
 		}
+		out.Write([]byte(sp))
 	}
-	termbox.Flush()
-}
-
-//draw line
-func drawLine(line int, str string) {
-	runes := []rune(str)
-	b := 0
-	for i := 0; i < len(runes); i++ {
-		termbox.SetCell(b, line, runes[i], termbox.ColorDefault, termbox.ColorDefault)
-		b += runewidth.RuneWidth(runes[i])
-	}
+	out.Write([]byte(fmt.Sprintf("\x1b[%dA", h)))
+	out.Write([]byte(fmt.Sprintf("\x1b[%dD", w)))
 }
 
 var usage = `
