@@ -47,6 +47,7 @@ func main() {
 	} else {
 		text, err = readFileByArg(flag.Arg(0))
 	}
+	text, err = transEnc(text, encode)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
