@@ -208,21 +208,9 @@ func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
 }
 
 func clearTerm(out io.Writer, tty *tty.TTY) {
-	w, h, err := tty.Size()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-	}
-	out.Write([]byte(fmt.Sprintf("\x1b[%dA", h)))
-	out.Write([]byte(fmt.Sprintf("\x1b[%dD", w)))
-	for y := 0; y < h; y++ {
-		sp := ""
-		for x := 0; x < w; x++ {
-			sp += " "
-		}
-		out.Write([]byte(sp))
-	}
-	out.Write([]byte(fmt.Sprintf("\x1b[%dA", h)))
-	out.Write([]byte(fmt.Sprintf("\x1b[%dD", w)))
+
+	out.Write([]byte(fmt.Sprintf("\x1b[H\x1b[J")))
+
 }
 
 var usage = `
