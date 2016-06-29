@@ -19,6 +19,8 @@ go get -u github.com/kurehajime/pera
 
 ```
 
+---
+
 ## Usage
 
 ### [1] make text file.
@@ -27,30 +29,29 @@ go get -u github.com/kurehajime/pera
 
 first page.
 
-
 ---
 
 second page.
-
 
 ---
 
 third page.
 
-
 ```
 
  It will be a new page in three hyphens(---) on beginning of line.
 
+---
+
 ### [2] do pera 
-
-
 
 ```
 $ pera example.txt
 ```
 
 Slide begins.
+
+---
 
 ## More usage
 
