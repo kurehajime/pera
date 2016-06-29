@@ -73,7 +73,7 @@
      -g  
 
          Gravity option. Set vertical-align to bottom. 
-                                                            .____________________
+                                                            .__________________
                                                                \o/ 
                                                                 |   Oh,
                                                                /)   Help me!
