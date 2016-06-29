@@ -61,4 +61,6 @@ If you run with no parameters, displays help slide.
 $ pera
 ```
 
+---
+
 ![chaofan](https://cloud.githubusercontent.com/assets/4569916/16450501/3edc6b02-3e38-11e6-93c7-9cbd2a6c40f2.gif)
