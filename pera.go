@@ -22,17 +22,17 @@ func main() {
 	var loop bool
 	var gravity bool
 	var interval int
-	var default_encoding string
-	var text string = ""
-	var err error = nil
+	var defaultEncoding string
+	var text string
+	var err error
 
 	//get flags
 	if runtime.GOOS == "windows" {
-		default_encoding = "sjis"
+		defaultEncoding = "sjis"
 	} else {
-		default_encoding = "utf-8"
+		defaultEncoding = "utf-8"
 	}
-	flag.StringVar(&encode, "e", default_encoding, "encoding")
+	flag.StringVar(&encode, "e", defaultEncoding, "encoding")
 	flag.BoolVar(&loop, "l", false, "loop (Exit:Press Esc Key)")
 	flag.BoolVar(&gravity, "g", false, "gravity(bottom align)")
 	flag.IntVar(&interval, "i", 0, "interval <= 10 millisecond (enable auto mode)")
@@ -103,7 +103,7 @@ func keyEvent(out io.Writer, tty *tty.TTY, text string, loop bool, gravity bool)
 				clearTerm(out, tty)
 				return
 			case termbox.KeySpace, termbox.KeyArrowRight, termbox.KeyEnter:
-				i += 1
+				i++
 				if i >= len(strs) {
 					if loop {
 						i = 0
@@ -112,7 +112,7 @@ func keyEvent(out io.Writer, tty *tty.TTY, text string, loop bool, gravity bool)
 					}
 				}
 			case termbox.KeyArrowLeft, termbox.KeyBackspace, termbox.KeyDelete, termbox.KeyBackspace2:
-				i -= 1
+				i--
 				if i < 0 {
 					if loop {
 						i = len(strs) - 1

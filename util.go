@@ -51,9 +51,9 @@ func readPipe() (string, error) {
 			return "", err
 		}
 		return string(bytes), nil
-	} else {
-		return "", nil
 	}
+	return "", nil
+
 }
 
 //get str by stdin
