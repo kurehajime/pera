@@ -171,7 +171,7 @@ func autoPlay(out io.Writer, tty *tty.TTY, interval int, text string, loop bool,
 func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
 	clearTerm(out, tty)
 	strs := strings.Split(str, "\n")
-	clr:="\x1b[2K"
+	clr := "\x1b[2K"
 	_, heigt, err := tty.Size()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -179,9 +179,9 @@ func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
 	if gravity == false {
 		for i := 0; i < len(strs) && i < heigt; i++ {
 			if i != heigt-1 {
-				out.Write([]byte(clr+strs[i] + "\r\n"))
+				out.Write([]byte(clr + strs[i] + "\r\n"))
 			} else {
-				out.Write([]byte(clr+strs[i]))
+				out.Write([]byte(clr + strs[i]))
 			}
 		}
 	} else {
@@ -193,9 +193,9 @@ func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
 		}
 		for i := 0; i < len(strs) && i < heigt; i++ {
 			if i != heigt-1 {
-				out.Write([]byte(clr+strs[i] + "\r\n"))
+				out.Write([]byte(clr + strs[i] + "\r\n"))
 			} else {
-				out.Write([]byte(clr+strs[i]))
+				out.Write([]byte(clr + strs[i]))
 			}
 		}
 	}
