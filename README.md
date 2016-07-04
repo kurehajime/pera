@@ -1,4 +1,7 @@
 # pera
+
+[![CircleCI](https://circleci.com/gh/kurehajime/pera.svg?style=svg)](https://circleci.com/gh/kurehajime/pera)
+
 pera is the command to slide display the text in CLI.
 
 ![screenshot1](https://cloud.githubusercontent.com/assets/4569916/16450500/3ed1e1be-3e38-11e6-860a-084bf6d82b0f.gif)
