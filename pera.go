@@ -78,29 +78,33 @@ func main() {
 	}
 
 	defer func() {
-		clearTerm(out, tty)
+		clearTerm(out)
 		termbox.Close()
 	}()
-
-	if interval == 0 {
-		keyEvent(out, tty, text, loop, gravity)
-	} else {
-		autoPlay(out, tty, interval, text, loop, gravity)
+	width, heigt, err := tty.Size()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
 	}
+	if interval == 0 {
+		KeyEvent(out, width, heigt, text, loop, gravity)
+	} else {
+		AutoPlay(out, width, heigt, interval, text, loop, gravity)
+	}
+	clearTerm(out)
 }
 
-// listen key event
-func keyEvent(out io.Writer, tty *tty.TTY, text string, loop bool, gravity bool) {
+// KeyEvent :listen key event
+func KeyEvent(out io.Writer, width int, heigt int, text string, loop bool, gravity bool) {
 	rep := regexp.MustCompile(`(?m:\n^---\n)`)
 	strs := rep.Split(text, -1)
 	i := 0
-	draw(out, tty, strs[i], gravity)
+
+	Draw(out, width, heigt, strs[i], gravity)
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyEsc, termbox.KeyCtrlC:
-				clearTerm(out, tty)
 				return
 			case termbox.KeySpace, termbox.KeyArrowRight, termbox.KeyEnter:
 				i++
@@ -124,18 +128,19 @@ func keyEvent(out io.Writer, tty *tty.TTY, text string, loop bool, gravity bool)
 			}
 		default:
 		}
-		draw(out, tty, strs[i], gravity)
+		Draw(out, width, heigt, strs[i], gravity)
 	}
 }
 
-//auto
-func autoPlay(out io.Writer, tty *tty.TTY, interval int, text string, loop bool, gravity bool) {
+//AutoPlay :auto
+func AutoPlay(out io.Writer, width int, heigt int, interval int, text string, loop bool, gravity bool) {
 	rep := regexp.MustCompile(`(?m:\n^---\n)`)
 	strs := rep.Split(text, -1)
 	stop := false
 	if interval < 10 {
 		interval = 10
 	}
+
 	go func() {
 		for {
 			switch ev := termbox.PollEvent(); ev.Type {
@@ -143,7 +148,6 @@ func autoPlay(out io.Writer, tty *tty.TTY, interval int, text string, loop bool,
 				switch ev.Key {
 				case termbox.KeyEsc, termbox.KeyCtrlC:
 					stop = true
-					clearTerm(out, tty)
 					return
 				default:
 				}
@@ -158,24 +162,20 @@ func autoPlay(out io.Writer, tty *tty.TTY, interval int, text string, loop bool,
 			if loop == true {
 				i = 0
 			} else {
-				clearTerm(out, tty)
 				return
 			}
 		}
-		draw(out, tty, strs[i], gravity)
+		Draw(out, width, heigt, strs[i], gravity)
 		time.Sleep(time.Duration(interval) * time.Millisecond)
 	}
 }
 
-//draw
-func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
-	clearTerm(out, tty)
+//Draw :draw
+func Draw(out io.Writer, width int, heigt int, str string, gravity bool) {
+	clearTerm(out)
 	strs := strings.Split(str, "\n")
 	clr := "\x1b[2K"
-	_, heigt, err := tty.Size()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-	}
+
 	if gravity == false {
 		for i := 0; i < len(strs) && i < heigt; i++ {
 			if i != heigt-1 {
@@ -201,10 +201,9 @@ func draw(out io.Writer, tty *tty.TTY, str string, gravity bool) {
 	}
 }
 
-func clearTerm(out io.Writer, tty *tty.TTY) {
+func clearTerm(out io.Writer) {
 	out.Write([]byte(fmt.Sprintf("\x1b[2J")))
 	out.Write([]byte(fmt.Sprintf("\x1b[0;0H")))
-
 }
 
 var usage = `
