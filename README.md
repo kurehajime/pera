@@ -17,9 +17,7 @@ or
 Build.
 
 ```
-
-go get -u github.com/kurehajime/pera
-
+go install github.com/kurehajime/pera@latest
 ```
 
 ---
